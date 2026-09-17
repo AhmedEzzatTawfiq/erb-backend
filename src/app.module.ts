@@ -5,6 +5,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserSessionsModule } from './user-sessions/user-sessions.module';
+import { PasswordResetsModule } from './password-resets/password-resets.module';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [
@@ -26,7 +29,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       inject: [ConfigService],
     }),
     UsersModule, 
-    AuthModule
+    AuthModule, UserSessionsModule, PasswordResetsModule, CustomersModule
   ],
   controllers: [AppController],
   providers: [AppService],

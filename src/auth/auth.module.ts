@@ -5,15 +5,17 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { UserSessionsModule } from 'src/user-sessions/user-sessions.module';
+import { PasswordResetsModule } from 'src/password-resets/password-resets.module';
 
 @Module({
-  imports: [UsersModule, JwtModule.registerAsync({
+  imports: [UserSessionsModule, PasswordResetsModule, UsersModule, JwtModule.registerAsync({
     inject: [ConfigService],
     useFactory: (configService: ConfigService) => ({
 
-      secret: configService.get('JWT_SECRET'),
+      secret: configService.get('JWT_ACCESS_SECRET'),
       signOptions: {
-        expiresIn: configService.get('JWT_EXPIRES_IN'),
+        expiresIn: configService.get('JWT_ACCESS_EXPIRES_IN'),
       }
     })
   })],
