@@ -8,6 +8,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserSessionsModule } from './user-sessions/user-sessions.module';
 import { PasswordResetsModule } from './password-resets/password-resets.module';
 import { CustomersModule } from './customers/customers.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -28,10 +33,18 @@ import { CustomersModule } from './customers/customers.module';
       }),
       inject: [ConfigService],
     }),
-    UsersModule, 
-    AuthModule, UserSessionsModule, PasswordResetsModule, CustomersModule
+    UsersModule,
+    AuthModule,
+    UserSessionsModule,
+    PasswordResetsModule,
+    CustomersModule,
+    CategoriesModule,
+    ProductsModule,
+    SuppliersModule,
+    PurchaseOrdersModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
