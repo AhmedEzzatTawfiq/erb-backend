@@ -13,6 +13,9 @@ import { ProductsModule } from './products/products.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { OrdersModule } from './orders/orders.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { EmployeesModule } from './employees/employees.module';
+import { DepartmentsModule } from './departments/departments.module';
 
 @Module({
   imports: [
@@ -33,6 +36,7 @@ import { OrdersModule } from './orders/orders.module';
       }),
       inject: [ConfigService],
     }),
+    // will add Scedule module
     UsersModule,
     AuthModule,
     UserSessionsModule,
@@ -43,6 +47,9 @@ import { OrdersModule } from './orders/orders.module';
     SuppliersModule,
     PurchaseOrdersModule,
     OrdersModule,
+    InvoicesModule,
+    EmployeesModule,
+    DepartmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

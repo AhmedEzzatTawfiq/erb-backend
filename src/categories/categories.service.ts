@@ -9,12 +9,16 @@ import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Product } from 'src/products/entities/product.entity';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
@@ -75,6 +79,16 @@ export class CategoriesService {
 
   async remove(id: string) {
     const category = await this.findOne(id);
+
+    const productCount = await this.productRepository.count({
+      where: {
+        categoryId: id,
+      }
+    })
+
+    if(productCount > 0){
+      throw new ConflictException('Category has products')
+    }
 
     await this.categoryRepository.remove(category);
 

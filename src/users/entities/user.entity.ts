@@ -1,8 +1,9 @@
 import { BaseEntity } from "src/common/entities/base.entity";
 import { Role } from "src/common/enums/role.enum";
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { UserSession } from "src/user-sessions/entities/user-session.entity";
 import { PasswordReset } from "src/password-resets/entities/password-reset.entity";
+import { Employee } from "src/employees/entities/employee.entity";
 
 @Entity("users")
 export class User extends BaseEntity {
@@ -38,6 +39,7 @@ export class User extends BaseEntity {
         default: Role.EMPLOYEE
     })
     role: Role;
+
 
 
 

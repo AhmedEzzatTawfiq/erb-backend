@@ -7,12 +7,16 @@ import { Product } from './entities/product.entity';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
 import { GetProductsQueryDto } from './dto/get-products-query.dto';
 import { CategoriesService } from 'src/categories/categories.service';
+import { OrderLine } from 'src/orders/entities/order-line.entity';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    @InjectRepository(OrderLine)
+    private readonly orderLineRepository: Repository<OrderLine>,
 
     private readonly categoriesService: CategoriesService,
   ) { }
@@ -113,6 +117,20 @@ export class ProductsService {
 
   async remove(id: string) {
     const product = await this.findOne(id);
+
+    const orderLineCount = await this.orderLineRepository.count({
+      where: {
+        productId: id,
+      }
+    })
+
+    if(orderLineCount > 0) {
+      await this.productRepository.softRemove(product);
+
+      return {
+        message: 'Product archived successfully'
+      }
+    }
 
     await this.productRepository.softRemove(product);
 

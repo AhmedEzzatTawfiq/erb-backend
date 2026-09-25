@@ -23,7 +23,7 @@ export class Product {
   @Column()
   categoryId: string;
 
-  @ManyToOne(() => Category, (category) => category.products)
+  @ManyToOne(() => Category, (category) => category.products, {onDelete: 'RESTRICT'})
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
@@ -48,5 +48,5 @@ export class Product {
   @DeleteDateColumn({
     type: 'timestamp',
   })
-  deletedAt: Date;
+  deletedAt: Date | null;
 }

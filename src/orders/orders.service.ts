@@ -15,6 +15,7 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { GetOrdersQueryDto } from './dto/get-orders-query.dto';
 
 import { OrderStatus } from './enums/order-status.enum';
+import { InvoicesService } from 'src/invoices/invoices.service';
 
 @Injectable()
 export class OrdersService {
@@ -24,6 +25,8 @@ export class OrdersService {
 
     @InjectRepository(OrderLine)
     private readonly orderLineRepository: Repository<OrderLine>,
+
+    private readonly invoicesService: InvoicesService,
 
     private readonly dataSource: DataSource,
   ) { }
@@ -99,13 +102,18 @@ export class OrdersService {
           orderLines.push(orderLine);
         }
 
-        // 3-Save lines
         await manager.save(orderLines);
 
-        // 4-Update order total
         savedOrder.totalAmount = totalAmount;
 
-        return manager.save(savedOrder);
+        const finalOrder = await manager.save(savedOrder);
+
+        await this.invoicesService.createFromOrder(
+          manager,
+          finalOrder.id,
+        );
+
+        return finalOrder;
       },
     );
   }

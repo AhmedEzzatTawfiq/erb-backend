@@ -11,7 +11,7 @@ export class PurchaseOrderItem {
   @Column()
   purchaseOrderId: string;
 
-  @ManyToOne(() => PurchaseOrder, (purchaseOrder) => purchaseOrder.items)
+  @ManyToOne(() => PurchaseOrder, (purchaseOrder) => purchaseOrder.items, {onDelete: 'RESTRICT'})
   @JoinColumn({ name: 'purchaseOrderId' })
   purchaseOrder: PurchaseOrder;
 

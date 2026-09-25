@@ -12,14 +12,14 @@ export class OrderLine {
   @Column()
   orderId: string;
 
-  @ManyToOne(() => Order, (order) => order.lines)
+  @ManyToOne(() => Order, (order) => order.lines, {onDelete: 'RESTRICT'})
   @JoinColumn({ name: 'orderId' })
   order: Order;
 
   @Column()
   productId: string;
 
-  @ManyToOne(() => Product)
+  @ManyToOne(() => Product, {onDelete: 'RESTRICT'})
   @JoinColumn({ name: 'productId' })
   product: Product;
 

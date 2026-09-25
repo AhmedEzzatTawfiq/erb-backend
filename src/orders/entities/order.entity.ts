@@ -1,8 +1,9 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { Customer } from "../../customers/entities/customer.entity";
 import { OrderStatus } from "../enums/order-status.enum";
 import { OrderLine } from "./order-line.entity";
 import { PrimaryGeneratedColumn } from "typeorm";
+import { Invoice } from "src/invoices/entities/invoice.entity";
 
 @Entity('orders')
 export class Order {
@@ -44,4 +45,10 @@ export class Order {
 
   @OneToMany(() => OrderLine, (line) => line.order)
   lines: OrderLine[];
+
+  @OneToOne(
+    () => Invoice,
+    (Invoice) => Invoice.order,
+  )
+  invoice: Invoice;
 }
