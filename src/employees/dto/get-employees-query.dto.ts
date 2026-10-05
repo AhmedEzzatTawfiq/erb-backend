@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from "class-validator";
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, Min } from "class-validator";
 import { EmployeeStatus } from "../enums/employee-status.enum";
 import { Type } from "class-transformer";
 
@@ -26,4 +26,12 @@ export class GetEmployeesQueryDto {
     @Type(() => Number)
     @IsInt()
     limit: number = 10;
+
+    @IsOptional()
+    @IsIn(['name', 'department', 'position', 'hireDate', 'salary'])
+    sortField?: 'name' | 'department' | 'position' | 'hireDate' | 'salary';
+
+    @IsOptional()
+    @IsIn(['asc', 'desc'])
+    sortOrder?: 'asc' | 'desc';
 }

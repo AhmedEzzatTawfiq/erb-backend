@@ -1,8 +1,9 @@
-import { Column, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { EmployeeStatus } from "../enums/employee-status.enum";
-import { Department } from "src/departments/entities/department.entity";
-import { User } from "src/users/entities/user.entity";
+import { Department } from "../../departments/entities/department.entity";
+import { User } from "../../users/entities/user.entity";
 
+@Entity('employees')
 export class Employee {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -27,7 +28,7 @@ export class Employee {
     departmentId: string;
 
     @Column()
-    jopTitle: string;
+    jobTitle: string;
 
     @Column({type: 'date'})
     hireDate: Date;

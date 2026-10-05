@@ -1,7 +1,9 @@
+import { Order } from '../../orders/entities/order.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -12,10 +14,16 @@ export class Customer {
   id: string;
 
   @Column({ type: 'varchar', length: 100 })
-  name: string;
+  companyName: string;
+
+  @Column({ type: 'varchar', length: 100 })
+  contactName: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
   email: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  avatar: string | null;
 
   @Column({ type: 'varchar', length: 30, nullable: true })
   phone: string | null;
@@ -31,6 +39,9 @@ export class Customer {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   taxId: string | null;
+
+  @OneToMany(() => Order, (order) => order.customer)
+  orders: Order[];
 
   @Column({ type: 'boolean', default: false })
   isDeleted: boolean;

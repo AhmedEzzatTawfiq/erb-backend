@@ -1,17 +1,28 @@
+import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
 } from 'class-validator';
+import { CreateOrderDto } from 'src/orders/dto/create-order.dto';
 
 export class CreateCustomerDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  companyName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  contactName: string;
 
   @IsEmail()
   @IsNotEmpty()
   email: string;
+  
+  @IsOptional()
+  avatar: string;
 
   @IsString()
   @IsNotEmpty()
@@ -30,6 +41,6 @@ export class CreateCustomerDto {
   country: string;
 
   @IsString()
-  @IsNotEmpty()
-  taxId: string;
+  taxId?: string;
+
 }

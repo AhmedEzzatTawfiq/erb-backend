@@ -21,49 +21,45 @@ export class InvoicesService {
   ) { }
 
   async createFromOrder(manager: EntityManager, orderId: string) {
-    return this.dataSource.transaction(async (manager: EntityManager) => {
-      const order = await manager.findOne(Order,
-        {
-          where: { id: orderId },
-          relations: {
-            customer: true,
-            lines: { product: true }
-          },
-        });
-
-      if (!order) {
-        throw new NotFoundException('Order not found');
-      }
-
-      const invoice = manager.create(Invoice, {
-        orderId: order.id,
-        customerId: order.customerId,
-        invoiceDate: order.orderDate,
-        dueDate: order.orderDate,
-        status: InvoiceStatus.PENDING,
-        totalAmount: order.totalAmount,
-      });
-
-      const savedInvoice = await manager.save(invoice);
-
-      const invoiceLines: InvoiceLine[] = [];
-
-      for (const orderLine of order.lines) {
-        const invoiceLine = manager.create(InvoiceLine, {
-          invoiceId: savedInvoice.id,
-          description: orderLine.product.name,
-          quantity: orderLine.quantity,
-          unitPrice: orderLine.unitPrice,
-          taxRate: 0,
-        });
-        invoiceLines.push(invoiceLine);
-      }
-
-      await manager.save(invoiceLines);
-
-      return this.findOneWithManager(manager, savedInvoice.id);
-
+    const order = await manager.findOne(Order, {
+      where: { id: orderId },
+      relations: {
+        customer: true,
+        lines: { product: true },
+      },
     });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const invoice = manager.create(Invoice, {
+      orderId: order.id,
+      customerId: order.customerId,
+      invoiceDate: order.orderDate,
+      dueDate: order.orderDate,
+      status: InvoiceStatus.PENDING,
+      totalAmount: order.totalAmount,
+    });
+
+    const savedInvoice = await manager.save(invoice);
+
+    const invoiceLines: InvoiceLine[] = [];
+
+    for (const orderLine of order.lines) {
+      const invoiceLine = manager.create(InvoiceLine, {
+        invoiceId: savedInvoice.id,
+        description: orderLine.product.name,
+        quantity: orderLine.quantity,
+        unitPrice: orderLine.unitPrice,
+        taxRate: 0,
+      });
+      invoiceLines.push(invoiceLine);
+    }
+
+    await manager.save(invoiceLines);
+
+    return this.findOneWithManager(manager, savedInvoice.id);
   }
 
   private async findOneWithManager(
@@ -81,34 +77,55 @@ export class InvoicesService {
   }
 
 
-  findAll(query: GetInvoicesQueryDto) {
-    const { status, customerId, from, to } = query;
+  async findAll(query: GetInvoicesQueryDto) {
+    const { status, customerId, from, to, search, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
     const queryBuilder = this.invoiceRepository.createQueryBuilder('invoice')
-      .leftJoinAndSelect('invoice.customer', 'customder')
+      .leftJoinAndSelect('invoice.customer', 'customer')
       .leftJoinAndSelect('invoice.order', 'order')
-      .leftJoinAndSelect('invoice.line', 'line');
+      .leftJoinAndSelect('invoice.lines', 'lines');
 
-      if(status) {
-        queryBuilder.andWhere('invoice.status = :status', {status})
-      }
+    if (status) {
+      queryBuilder.andWhere('invoice.status = :status', { status });
+    }
 
-      if(customerId) {
-        queryBuilder.andWhere('invoice.customerId = :customerId', {customerId})
-      }
+    if (customerId) {
+      queryBuilder.andWhere('invoice.customerId = :customerId', { customerId });
+    }
 
-      if(from) {
-        queryBuilder.andWhere('invoice.invoiceDate >= :from', {from})
-      }
+    if (from) {
+      queryBuilder.andWhere('invoice.invoiceDate >= :from', { from });
+    }
 
-      if(to) {
-        queryBuilder.andWhere('invoice.invoiceDate <= :customerId', {to})
-      }
+    if (to) {
+      queryBuilder.andWhere('invoice.invoiceDate <= :to', { to });
+    }
 
-      queryBuilder.orderBy('invoice.invoiceDate', 'DESC')
+    if (search) {
+      queryBuilder.andWhere(
+        '(customer.companyName ILIKE :search OR customer.contactName ILIKE :search OR invoice.id::text ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
 
-      return queryBuilder.getMany();
+    queryBuilder
+      .orderBy('invoice.invoiceDate', 'DESC')
+      .skip(skip)
+      .take(limit);
 
+    const [invoices, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: invoices,
+      meta: {
+        total,
+        totalCount: total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {

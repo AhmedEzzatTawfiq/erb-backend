@@ -32,11 +32,12 @@ import { DepartmentsModule } from './departments/departments.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: true, // will change it later
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
     // will add Scedule module
+
     UsersModule,
     AuthModule,
     UserSessionsModule,

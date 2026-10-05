@@ -1,6 +1,7 @@
-import { Employee } from "src/employees/entities/employee.entity";
-import { Column, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Employee } from "../../employees/entities/employee.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity('departments')
 export class Department {
     @PrimaryGeneratedColumn('uuid')
     id: string;

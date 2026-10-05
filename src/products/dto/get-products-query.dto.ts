@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -33,4 +34,12 @@ export class GetProductsQueryDto {
   @Type(() => Boolean)
   @IsBoolean()
   lowStock?: boolean;
+
+  @IsOptional()
+  @IsIn(['name', 'category', 'price', 'stock'])
+  sortField?: 'name' | 'category' | 'price' | 'stock';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }

@@ -119,7 +119,8 @@ export class OrdersService {
   }
 
   async findAll(query: GetOrdersQueryDto) {
-    const { status, customerId, from, to } = query;
+    const { status, customerId, from, to, search, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
@@ -155,9 +156,30 @@ export class OrdersService {
       );
     }
 
-    queryBuilder.orderBy('order.orderDate', 'DESC');
+    if (search) {
+      queryBuilder.andWhere(
+        '(customer.companyName ILIKE :search OR customer.contactName ILIKE :search OR order.id::text ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
 
-    return queryBuilder.getMany();
+    queryBuilder
+      .orderBy('order.orderDate', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [orders, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: orders,
+      meta: {
+        total,
+        totalCount: total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {

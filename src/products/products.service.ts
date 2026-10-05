@@ -43,7 +43,9 @@ export class ProductsService {
 
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.productRepository.createQueryBuilder('product');
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category');
 
     if(search) {
       queryBuilder.andWhere('(product.name ILIKE :search OR product.sku ILIKE :search)', {
@@ -83,6 +85,7 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.productRepository.findOne({
       where: { id },
+      relations: { category: true },
     });
 
     if (!product) {

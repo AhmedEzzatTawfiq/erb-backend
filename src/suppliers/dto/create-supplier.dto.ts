@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -29,4 +30,17 @@ export class CreateSupplierDto {
   @IsOptional()
   @IsString()
   paymentTerms?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  productsSupplied?: string[];
 }

@@ -6,12 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 
 import { SuppliersService } from './suppliers.service';
 
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { GetSuppliersQueryDto } from './dto/get-suppliers-query.dto';
 
 @Controller('suppliers')
 export class SuppliersController {
@@ -27,8 +29,8 @@ export class SuppliersController {
   }
 
   @Get()
-  findAll() {
-    return this.suppliersService.findAll();
+  findAll(@Query() query: GetSuppliersQueryDto) {
+    return this.suppliersService.findAll(query);
   }
 
   @Get(':id')

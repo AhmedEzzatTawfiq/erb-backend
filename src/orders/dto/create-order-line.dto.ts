@@ -13,6 +13,6 @@ export class CreateOrderLineDto {
     unitPrice: number;
 
     @IsNumber({maxDecimalPlaces: 2})
-    @Min(2)
+    @Min(0)
     discount: number;
 }

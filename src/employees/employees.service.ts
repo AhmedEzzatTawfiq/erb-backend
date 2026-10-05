@@ -56,7 +56,7 @@ export class EmployeesService {
   }
 
   async findAll(query: GetEmployeesQueryDto) {
-    const { status, departmentId, search, page, limit } = query;
+    const { status, departmentId, search, page, limit, sortField, sortOrder } = query;
 
     const skip = (page - 1) * limit;
 
@@ -76,7 +76,21 @@ export class EmployeesService {
       queryBuilder.andWhere('employee.name ILIKE :search OR employee.email ILIKE :search', { search: `%${search}%` })
     }
 
-    queryBuilder.orderBy('employee.hireDate', 'DESC').skip(skip).take(limit)
+    //sorting
+    const sortColumn = {
+      name: 'employee.name',
+      department: 'department.name',
+      position: 'employee.jobTitle',
+      hireDate: 'employee.hireDate',
+      salary: 'employee.salary',
+    }[sortField ?? 'hireDate'];
+
+    const order = sortOrder === 'desc' ? 'DESC' : 'ASC';
+
+    queryBuilder
+      .orderBy(sortColumn, order)
+      .skip(skip)
+      .take(limit)
 
     const [employees, total] = await queryBuilder.getManyAndCount()
 
@@ -137,7 +151,7 @@ export class EmployeesService {
       employee.departmentId = updateEmployeeDto.departmentId;
     }
 
-    const { departmentId, hireDate, ...employeeData} = updateEmployeeDto;
+    const { departmentId, hireDate, ...employeeData } = updateEmployeeDto;
 
     Object.assign(employee, employeeData);
 
