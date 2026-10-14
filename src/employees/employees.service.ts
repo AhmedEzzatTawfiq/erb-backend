@@ -7,6 +7,7 @@ import { Employee } from './entities/employee.entity';
 import { EmployeeStatus } from './enums/employee-status.enum';
 import { GetEmployeesQueryDto } from './dto/get-employees-query.dto';
 import { Department } from 'src/departments/entities/department.entity';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class EmployeesService {
@@ -16,6 +17,8 @@ export class EmployeesService {
 
     @InjectRepository(Department)
     private readonly departmentRepository: Repository<Department>,
+
+    private readonly cloudinaryService: CloudinaryService,
 
   ) { }
 
@@ -54,6 +57,77 @@ export class EmployeesService {
 
     return this.findOne(savedEmployee.id)
   }
+
+  async uploadAvatar(id: string, file: Express.Multer.File) {
+
+    const employee = await this.findOne(id);
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    const oldPublicId = employee.avatarPublicId;
+
+    const newAvatar = await this.cloudinaryService.uploadImage(file, 'erb/employees');
+
+    try {
+
+      employee.avatar = newAvatar.url;
+      employee.avatarPublicId = newAvatar.publicId;
+
+      const updatedEmployee = await this.employeeRepository.save(employee);
+
+      if (oldPublicId) {
+        try {
+          await this.cloudinaryService.deleteImage(
+            oldPublicId,
+          );
+        } catch (error) {
+          console.error(
+            'Failed to delete old avatar:',
+            error,
+          );
+        }
+      }
+
+      return updatedEmployee;
+
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(newAvatar.publicId);
+
+      throw error;
+    }
+
+  }
+
+  async deleteAvatar(id: string) {
+    const employee = await this.findOne(id);
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    const oldPublicId = employee.avatarPublicId;
+
+    if (!oldPublicId) {
+      return employee;
+    }
+
+    try {
+      await this.cloudinaryService.deleteImage(oldPublicId);
+
+      employee.avatar = null;
+      employee.avatarPublicId = null;
+
+      await this.employeeRepository.save(employee);
+
+      return employee;
+      
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
   async findAll(query: GetEmployeesQueryDto) {
     const { status, departmentId, search, page, limit, sortField, sortOrder } = query;

@@ -22,8 +22,11 @@ export class Customer {
   @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
   email: string | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   avatar: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  avatarPublicId: string | null;
 
   @Column({ type: 'varchar', length: 30, nullable: true })
   phone: string | null;

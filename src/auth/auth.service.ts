@@ -48,14 +48,17 @@ export class AuthService {
 
     const user = await this.usersService.create(userData)
 
-    // access token
-    const accessToken = await this.generateAccessToken(user)
+    // Create session
+  const session = await this.userSessionsService.createSession(user);
+
+  // Issue access + refresh tokens
+  const tokens = await this.issueTokens(user, session);
 
 
     // return a success response
     return {
       message: 'User registered successfully',
-      accessToken
+      ...tokens
     }
 
 
@@ -104,8 +107,8 @@ export class AuthService {
     return user
   }
 
-  async refresh(refreshTokenDto: RefreshTokenDto) {
-    const { refreshToken } = refreshTokenDto
+  async refresh(refreshToken: string) {
+
 
     const payload = await this.verifyRefreshToken(refreshToken)
 
@@ -147,8 +150,7 @@ export class AuthService {
 
   }
 
-  async logout(refreshTokenDto: RefreshTokenDto) {
-    const { refreshToken } = refreshTokenDto;
+  async logout(refreshToken: string) {
 
     const payload = await this.verifyRefreshToken(refreshToken);
 
@@ -171,8 +173,7 @@ export class AuthService {
   }
 
 
-  async logoutAll(refreshTokenDto: RefreshTokenDto) {
-    const { refreshToken } = refreshTokenDto;
+  async logoutAll(refreshToken: string) {
 
     const payload = await this.verifyRefreshToken(refreshToken);
 

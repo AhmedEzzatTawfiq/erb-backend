@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserSessionsService } from 'src/user-sessions/user-sessions.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly userSessionsService: UserSessionsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -50,6 +52,76 @@ export class UsersService {
     const user = this.userRepository.create(createUserDto)
 
     return await this.userRepository.save(user)
+  }
+
+  async uploadAvatar(id: string, file: Express.Multer.File) {
+
+    const user = await this.findUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const oldPublicId = user.avatarPublicId;
+
+    const newAvatar = await this.cloudinaryService.uploadImage(file, 'erb/users');
+
+    try {
+
+      user.avatar = newAvatar.url;
+      user.avatarPublicId = newAvatar.publicId;
+
+      const updatedUser = await this.userRepository.save(user);
+
+      if (oldPublicId) {
+        try {
+          await this.cloudinaryService.deleteImage(
+            oldPublicId,
+          );
+        } catch (error) {
+          console.error(
+            'Failed to delete old avatar:',
+            error,
+          );
+        }
+      }
+
+      return updatedUser;
+
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(newAvatar.publicId);
+
+      throw error;
+    }
+
+  }
+
+  async deleteAvatar(id: string) {
+    const user = await this.findUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const oldPublicId = user.avatarPublicId;
+
+    if (!oldPublicId) {
+      return user;
+    }
+
+    try {
+      await this.cloudinaryService.deleteImage(oldPublicId);
+
+      user.avatar = null;
+      user.avatarPublicId = null;
+
+      await this.userRepository.save(user);
+
+      return user;
+
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findAll(): Promise<User[]> {

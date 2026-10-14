@@ -5,12 +5,15 @@ import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetCustomersQueryDto } from './dto/get-customers-query.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class CustomersService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
   async create(createCustomerDto: CreateCustomerDto) {
@@ -28,6 +31,82 @@ export class CustomersService {
     return customer;
   }
 
+
+  async uploadAvatar(id: string, file: Express.Multer.File) {
+
+    const customer = await this.customerRepository.findOne({
+      where: {
+        id,
+        isDeleted: false,
+      },
+    });
+
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
+    const oldPublicId = customer.avatarPublicId;
+
+    const newAvatar = await this.cloudinaryService.uploadImage(file, 'erb/customers');
+
+    try {
+
+      customer.avatar = newAvatar.url;
+      customer.avatarPublicId = newAvatar.publicId;
+
+      const updatedCustomer = await this.customerRepository.save(customer);
+
+      if (oldPublicId) {
+        try {
+          await this.cloudinaryService.deleteImage(oldPublicId);
+        } catch (error) {
+          console.error('Failed to delete old avatar:', error);
+        }
+      }
+
+      return updatedCustomer;
+
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(newAvatar.publicId);
+
+      throw error;
+    }
+
+  }
+
+  async deleteAvatar(id: string) {
+    const customer = await this.customerRepository.findOne({
+      where: {
+        id,
+        isDeleted: false,
+      },
+    });
+
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
+    const oldPublicId = customer.avatarPublicId;
+
+    if (!oldPublicId) {
+      return customer;
+    }
+
+    try {
+      await this.cloudinaryService.deleteImage(oldPublicId);
+
+      customer.avatar = null;
+      customer.avatarPublicId = null;
+
+      await this.customerRepository.save(customer);
+
+      return customer;
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async findAll(query: GetCustomersQueryDto) {
     const { page = 1, limit = 10, search, sortField = 'companyName', sortOrder = 'asc' } = query;
 
@@ -41,6 +120,7 @@ export class CustomersService {
         'customer.contactName',
         'customer.email',
         'customer.avatar',
+        'customer.avatarPublicId',
         'customer.phone',
         'customer.address',
         'customer.city',
@@ -119,6 +199,7 @@ export class CustomersService {
       contactName: item.customer_contactName,
       email: item.customer_email,
       avatar: item.customer_avatar,
+      avatarPublicId: item.customer_avatarPublicId,
       phone: item.customer_phone,
       address: item.customer_address,
       city: item.customer_city,
@@ -173,6 +254,7 @@ export class CustomersService {
         'customer.contactName',
         'customer.email',
         'customer.avatar',
+        'customer.avatarPublicId',
         'customer.phone',
         'customer.address',
         'customer.city',
@@ -203,6 +285,7 @@ export class CustomersService {
       contactName: result.customer_contactName,
       email: result.customer_email,
       avatar: result.customer_avatar,
+      avatarPublicId: result.customer_avatarPublicId,
       phone: result.customer_phone,
       address: result.customer_address,
       city: result.customer_city,

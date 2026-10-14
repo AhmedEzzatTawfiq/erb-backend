@@ -11,18 +11,91 @@ import { Supplier } from './entities/supplier.entity';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { GetSuppliersQueryDto } from './dto/get-suppliers-query.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class SuppliersService {
   constructor(
     @InjectRepository(Supplier)
     private readonly supplierRepository: Repository<Supplier>,
-  ) {}
+
+    private readonly cloudinaryService: CloudinaryService,
+  ) { }
 
   async create(createSupplierDto: CreateSupplierDto) {
     const supplier = this.supplierRepository.create(createSupplierDto);
 
     return this.supplierRepository.save(supplier);
+  }
+
+  async uploadAvatar(id: string, file: Express.Multer.File) {
+
+    const supplier = await this.findOne(id);
+
+    if (!supplier) {
+      throw new NotFoundException('Supplier not found');
+    }
+
+    const oldPublicId = supplier.avatarPublicId;
+
+    const newAvatar = await this.cloudinaryService.uploadImage(file, 'erb/suppliers');
+
+    try {
+
+      supplier.avatar = newAvatar.url;
+      supplier.avatarPublicId = newAvatar.publicId;
+
+      const updatedSupplier = await this.supplierRepository.save(supplier);
+
+      if (oldPublicId) {
+        try {
+          await this.cloudinaryService.deleteImage(
+            oldPublicId,
+          );
+        } catch (error) {
+          console.error(
+            'Failed to delete old avatar:',
+            error,
+          );
+        }
+      }
+
+      return updatedSupplier;
+
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(newAvatar.publicId);
+
+      throw error;
+    }
+
+  }
+
+  async deleteAvatar(id: string) {
+    const supplier = await this.findOne(id);
+
+    if (!supplier) {
+      throw new NotFoundException('Supplier not found');
+    }
+
+    const oldPublicId = supplier.avatarPublicId;
+
+    if (!oldPublicId) {
+      return supplier;
+    }
+
+    try {
+      await this.cloudinaryService.deleteImage(oldPublicId);
+
+      supplier.avatar = null;
+      supplier.avatarPublicId = null;
+
+      await this.supplierRepository.save(supplier);
+
+      return supplier;
+
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findAll(query?: GetSuppliersQueryDto) {

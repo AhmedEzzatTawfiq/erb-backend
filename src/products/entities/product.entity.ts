@@ -17,6 +17,12 @@ export class Product {
   @Column()
   name: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  avatar: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  avatarPublicId: string | null;
+
   @Column({ unique: true })
   sku: string;
 

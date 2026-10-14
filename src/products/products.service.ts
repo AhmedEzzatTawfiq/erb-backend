@@ -8,6 +8,7 @@ import { AdjustStockDto } from './dto/adjust-stock.dto';
 import { GetProductsQueryDto } from './dto/get-products-query.dto';
 import { CategoriesService } from 'src/categories/categories.service';
 import { OrderLine } from 'src/orders/entities/order-line.entity';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ProductsService {
@@ -19,6 +20,8 @@ export class ProductsService {
     private readonly orderLineRepository: Repository<OrderLine>,
 
     private readonly categoriesService: CategoriesService,
+
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
   async create(createProductDto: CreateProductDto) {
@@ -38,6 +41,76 @@ export class ProductsService {
     return await this.productRepository.save(product);
   }
 
+  async uploadAvatar(id: string, file: Express.Multer.File) {
+
+    const product = await this.findOne(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const oldPublicId = product.avatarPublicId;
+
+    const newAvatar = await this.cloudinaryService.uploadImage(file, 'erb/products');
+
+    try {
+
+      product.avatar = newAvatar.url;
+      product.avatarPublicId = newAvatar.publicId;
+
+      const updatedProduct = await this.productRepository.save(product);
+
+      if (oldPublicId) {
+        try {
+          await this.cloudinaryService.deleteImage(
+            oldPublicId,
+          );
+        } catch (error) {
+          console.error(
+            'Failed to delete old avatar:',
+            error,
+          );
+        }
+      }
+
+      return updatedProduct;
+
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(newAvatar.publicId);
+
+      throw error;
+    }
+
+  }
+
+  async deleteAvatar(id: string) {
+    const product = await this.findOne(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const oldPublicId = product.avatarPublicId;
+
+    if (!oldPublicId) {
+      return product;
+    }
+
+    try {
+      await this.cloudinaryService.deleteImage(oldPublicId);
+
+      product.avatar = null;
+      product.avatarPublicId = null;
+
+      await this.productRepository.save(product);
+
+      return product;
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async findAll(query: GetProductsQueryDto) {
     const { page, limit, search, categoryId, lowStock } = query;
 
@@ -47,7 +120,7 @@ export class ProductsService {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category');
 
-    if(search) {
+    if (search) {
       queryBuilder.andWhere('(product.name ILIKE :search OR product.sku ILIKE :search)', {
         search: `%${search}%`,
       });
@@ -59,14 +132,14 @@ export class ProductsService {
       });
     }
 
-    if(lowStock) {
+    if (lowStock) {
       queryBuilder.andWhere('product.stockQuantity <= product.reorderLevel');
     }
 
     queryBuilder
-    .skip(skip)
-    .take(limit)
-    .orderBy('product.createdAt', 'DESC');
+      .skip(skip)
+      .take(limit)
+      .orderBy('product.createdAt', 'DESC');
 
     const [products, total] = await queryBuilder.getManyAndCount();
 
@@ -127,7 +200,7 @@ export class ProductsService {
       }
     })
 
-    if(orderLineCount > 0) {
+    if (orderLineCount > 0) {
       await this.productRepository.softRemove(product);
 
       return {

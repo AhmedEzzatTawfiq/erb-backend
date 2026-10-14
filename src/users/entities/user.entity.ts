@@ -14,6 +14,12 @@ export class User extends BaseEntity {
     @OneToMany(() => PasswordReset, passwordReset => passwordReset.user)
     passwordResets: PasswordReset[];
 
+    @Column({ type: 'varchar', nullable: true })
+    avatar: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    avatarPublicId: string | null;
+
     @Column({
         type: 'varchar',
         length: 100

@@ -17,6 +17,12 @@ export class Supplier {
   @Column()
   contactName: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  avatar: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  avatarPublicId: string | null;
+
   @Column({ nullable: true })
   email: string;
 
@@ -31,9 +37,6 @@ export class Supplier {
 
   @Column({ nullable: true, default: 'Active' })
   status: string;
-
-  @Column({ nullable: true })
-  avatar: string;
 
   @Column({ type: 'simple-array', nullable: true })
   productsSupplied: string[];

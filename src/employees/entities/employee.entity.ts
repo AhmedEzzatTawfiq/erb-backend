@@ -11,17 +11,23 @@ export class Employee {
     @Column()
     name: string;
 
-    @Column({unique: true})
+    @Column({ unique: true })
     email: string;
 
-    @Column({nullable: true})
+    @Column({ type: 'varchar', nullable: true })
+    avatar: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    avatarPublicId: string | null;
+
+    @Column({ nullable: true })
     phone: string;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     address: string;
 
     @ManyToOne(() => Department, (department) => department.employees)
-    @JoinColumn({name: 'departmentId'})
+    @JoinColumn({ name: 'departmentId' })
     department: Department;
 
     @Column()
@@ -30,7 +36,7 @@ export class Employee {
     @Column()
     jobTitle: string;
 
-    @Column({type: 'date'})
+    @Column({ type: 'date' })
     hireDate: Date;
 
     @Column({
@@ -47,6 +53,6 @@ export class Employee {
     })
     status: EmployeeStatus;
 
-    
-    
+
+
 }

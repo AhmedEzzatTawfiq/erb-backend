@@ -1,26 +1,46 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import type { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.register(createUserDto);
+
+    this.setRefreshTokenCookie(response, result.refreshToken);
+
+    return {
+      message: result.message,
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('login')
-  login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.login(loginDto);
+
+    this.setRefreshTokenCookie(response, result.refreshToken);
+
+    return {
+      message: result.message,
+      accessToken: result.accessToken,
+    };
   }
 
   @Get('profile')
@@ -30,22 +50,54 @@ export class AuthController {
   }
 
   @Post('refresh')
-  refresh(
-    @Body() refreshTokenDto: RefreshTokenDto
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.refresh(refreshTokenDto);
+    const refreshToken = request.cookies.refreshToken;
+
+    const result = await this.authService.refresh(refreshToken);
+
+    this.setRefreshTokenCookie(response, result.refreshToken);
+
+    return {
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('logout')
   async logout(
-    @Body() refreshTokenDto: RefreshTokenDto
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.logout(refreshTokenDto);
+    const refreshToken = request.cookies.refreshToken;
+    const result = await this.authService.logout(refreshToken);
+
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: false, // true when using https
+      sameSite: 'lax',
+    });
+
+    return result;
   }
 
   @Post('logout-all')
-  async logoutAll(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.logoutAll(refreshTokenDto);
+  async logoutAll(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const refreshToken = request.cookies?.refreshToken;
+
+    const result = await this.authService.logoutAll(refreshToken);
+
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+    });
+
+    return result;
   }
 
   @Post('forgot-password')
@@ -58,4 +110,15 @@ export class AuthController {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
+  private setRefreshTokenCookie(
+    response: Response,
+    refreshToken: string,
+  ) {
+    response.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+  }
 }
