@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { CustomerStatus } from '../enums/customer-status.enum';
 
 export class GetCustomersQueryDto {
   @IsOptional()
@@ -26,4 +27,9 @@ export class GetCustomersQueryDto {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc';
+
+
+  @IsEnum(CustomerStatus)
+  @IsOptional()
+  status?: CustomerStatus;
 }

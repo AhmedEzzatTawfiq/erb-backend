@@ -49,10 +49,10 @@ export class AuthService {
     const user = await this.usersService.create(userData)
 
     // Create session
-  const session = await this.userSessionsService.createSession(user);
+    const session = await this.userSessionsService.createSession(user);
 
-  // Issue access + refresh tokens
-  const tokens = await this.issueTokens(user, session);
+    // Issue access + refresh tokens
+    const tokens = await this.issueTokens(user, session);
 
 
     // return a success response
@@ -65,38 +65,39 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    // get user from db
-    const user = await this.usersService.findByEmailWithPassword(loginDto.email)
+    const user = await this.usersService.findByEmailWithPassword(
+      loginDto.email,
+    );
 
-    // validate user
+    console.log('[Login] User found:', !!user);
+    console.log('[Login] Password hash exists:', !!user?.password);
+    console.log(
+      '[Login] Password hash format:',
+      user?.password?.startsWith('$2'),
+    );
+
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials')
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    // compare password
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password)
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
-    // validate password
+    console.log('[Login] Password valid:', isPasswordValid);
+
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials')
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    // create session
-    const session = await this.userSessionsService.createSession(user)
-
-    // issue tokens
-    const tokens = await this.issueTokens(user, session)
+    const session = await this.userSessionsService.createSession(user);
+    const tokens = await this.issueTokens(user, session);
 
     return {
       message: 'User logged in successfully',
       ...tokens,
-    }
-
-
-
-
-
-
+    };
   }
 
   async getProfile(userId: string) {
@@ -202,7 +203,6 @@ export class AuthService {
 
     if (user) {
       const token = await this.passwordResetsService.createPasswordResetToken(user.id)
-      console.log('Password reset token:', token);
 
     }
     return {

@@ -5,8 +5,10 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
+import { UserStatus } from '../enums/user-status.enum';
 
 
 export class UpdateUserDto {
@@ -24,4 +26,12 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(Role)
   role?: Role;
+
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
 }

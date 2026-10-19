@@ -48,13 +48,11 @@ export class UserSessionsService {
   }
 
   async revokeAllSessions(userId: string): Promise<void>{
-    const result = await this.userSessionRepository.update({userId}, {
+    await this.userSessionRepository.update({userId}, {
       isRevoked: true,
       revokedAt: new Date()
     })
-    if (result.affected === 0) {
-      throw new NotFoundException(`No sessions found for user ID ${userId}`);
-    }
+    // No error if affected === 0 — user may simply have no active sessions (e.g. during password reset)
   }
 
   async deleteSession(sessionId: string): Promise<void> {

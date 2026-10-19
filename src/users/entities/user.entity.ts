@@ -4,6 +4,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, OneToOne, Prima
 import { UserSession } from "../../user-sessions/entities/user-session.entity";
 import { PasswordReset } from "../../password-resets/entities/password-reset.entity";
 import { Employee } from "../../employees/entities/employee.entity";
+import { UserStatus } from "../enums/user-status.enum";
 
 @Entity("users")
 export class User extends BaseEntity {
@@ -45,6 +46,13 @@ export class User extends BaseEntity {
         default: Role.EMPLOYEE
     })
     role: Role;
+
+    @Column({
+        type: 'enum',
+        enum: UserStatus,
+        default: UserStatus.ACTIVE
+    })
+    status: UserStatus;
 
 
 

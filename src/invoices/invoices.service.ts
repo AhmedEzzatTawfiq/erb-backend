@@ -175,9 +175,9 @@ export class InvoicesService {
     await this.invoiceRepository
       .createQueryBuilder()
       .update(Invoice)
-      .set({status: InvoiceStatus.OVERDUE})
-      .where('status = :status', {status: InvoiceStatus.PENDING})
-      .andWhere('dueDate < :today', {today})
+      .set({ status: InvoiceStatus.OVERDUE })
+      .where('status = :status', { status: InvoiceStatus.PENDING })
+      .andWhere('dueDate < :today', { today })
       .execute();
   }
 

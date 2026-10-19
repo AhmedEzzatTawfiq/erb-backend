@@ -36,7 +36,7 @@ export class UserSession extends BaseEntity {
 
     @Column({
         name: 'ip_address',
-        type: 'varchar',    
+        type: 'varchar',
         length: 255,
         nullable: true
     })

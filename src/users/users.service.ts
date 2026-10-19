@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserSessionsService } from 'src/user-sessions/user-sessions.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -43,12 +44,23 @@ export class UsersService {
         id: true,
         name: true,
         email: true,
-        role: true
+        role: true,
+        status: true,
+        avatar: true,
+        avatarPublicId: true,
       }
     })
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exist');
+    }
+
     const user = this.userRepository.create(createUserDto)
 
     return await this.userRepository.save(user)
@@ -124,16 +136,73 @@ export class UsersService {
     }
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({
+
+  async findAll({
+    page = 1,
+    limit = 6,
+    search = '',
+    status,
+    role,
+    sortField = 'createdAt',
+    sortOrder = 'desc',
+  }: GetUsersQueryDto = new GetUsersQueryDto()) {
+    const allowedSortFields: Record<string, string> = {
+      name: 'name',
+      role: 'role',
+      status: 'status',
+      created: 'createdAt',
+      createdAt: 'createdAt',
+    };
+
+    const orderBy = allowedSortFields[sortField] ?? 'createdAt';
+
+    const whereSearch = search
+      ? [
+        { name: ILike(`%${search}%`) },
+        { email: ILike(`%${search}%`) },
+      ]
+      : undefined;
+
+    const baseWhere = whereSearch
+      ? whereSearch.map((item) => ({
+        ...item,
+        ...(status && { status }),
+        ...(role && { role }),
+      }))
+      : {
+        ...(status && { status }),
+        ...(role && { role }),
+      };
+
+    const [users, total] = await this.userRepository.findAndCount({
+      where: baseWhere,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        status: true,
+        avatar: true,
+        createdAt: true,
       },
+      order: {
+        [orderBy]: sortOrder.toUpperCase() as 'ASC' | 'DESC',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      data: users,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
+
 
   async updatePassword(userId: string, hashedPassword: string,): Promise<void> {
     await this.userRepository.update(

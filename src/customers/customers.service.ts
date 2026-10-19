@@ -108,7 +108,7 @@ export class CustomersService {
   }
 
   async findAll(query: GetCustomersQueryDto) {
-    const { page = 1, limit = 10, search, sortField = 'companyName', sortOrder = 'asc' } = query;
+    const { page = 1, limit = 10, search, status, sortField = 'companyName', sortOrder = 'asc' } = query;
 
     // Sorting
     const queryBuilder = this.customerRepository
@@ -135,7 +135,13 @@ export class CustomersService {
         'COALESCE(SUM(order.totalAmount), 0)',
         'totalSpent',
       )
-      .where('customer.isDeleted = false');
+      .where('1 = 1');
+
+    if (status === 'active') {
+      queryBuilder.andWhere('customer.isDeleted = false');
+    } else if (status === 'inactive') {
+      queryBuilder.andWhere('customer.isDeleted = true');
+    }
 
     if (search) {
       queryBuilder.andWhere(
@@ -187,9 +193,7 @@ export class CustomersService {
 
 
     // Pagination
-    queryBuilder
-      .skip((page - 1) * limit)
-      .take(limit);
+    queryBuilder.offset((page - 1) * limit).limit(limit);
 
     const rawData = await queryBuilder.getRawMany();
 
@@ -208,29 +212,36 @@ export class CustomersService {
       isDeleted: item.customer_isDeleted,
       createdAt: item.customer_createdAt,
       updatedAt: item.customer_updatedAt,
-
+      status: item.customer_isDeleted ? 'inactive' : 'active',
       orders: Number(item.orders),
       totalSpent: Number(item.totalSpent),
     }));
 
+
     const countQuery = this.customerRepository
       .createQueryBuilder('customer')
-      .where('customer.isDeleted = false');
+      .where('1 = 1');
 
+    if (status === 'active') {
+      countQuery.andWhere('customer.isDeleted = false');
+    } else if (status === 'inactive') {
+      countQuery.andWhere('customer.isDeleted = true');
+    }
 
     if (search) {
       countQuery.andWhere(
         `(
-        customer.companyName ILIKE :search
-        OR customer.contactName ILIKE :search
-        OR customer.email ILIKE :search
-        OR customer.phone ILIKE :search
-      )`,
+      customer.companyName ILIKE :search
+      OR customer.contactName ILIKE :search
+      OR customer.email ILIKE :search
+      OR customer.phone ILIKE :search
+    )`,
         { search: `%${search}%` },
       );
     }
 
     const totalCount = await countQuery.getCount();
+
 
     return {
       data,
@@ -296,6 +307,7 @@ export class CustomersService {
       updatedAt: result.customer_updatedAt,
       orders: Number(result.orders),
       totalSpent: Number(result.totalSpent),
+      status: result.customer_isDeleted ? 'inactive' : 'active',
     };
   }
 
@@ -327,18 +339,25 @@ export class CustomersService {
     return this.findOne(id);
   }
 
+
   async remove(id: string) {
     const customer = await this.customerRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        isDeleted: false,
+      },
     });
+
     if (!customer) {
       throw new NotFoundException('Customer not found');
     }
 
-    await this.customerRepository.remove(customer);
+    customer.isDeleted = true;
+
+    await this.customerRepository.save(customer);
 
     return {
-      message: 'Customer deleted successfully',
+      message: 'Customer deactivated successfully',
     };
   }
 
