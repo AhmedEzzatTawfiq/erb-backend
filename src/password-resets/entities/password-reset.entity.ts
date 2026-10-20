@@ -1,12 +1,12 @@
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    ManyToOne,
-    PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { JoinColumn } from 'typeorm';
 
 @Entity('password_resets')
 export class PasswordReset {
@@ -19,12 +19,11 @@ export class PasswordReset {
   })
   userId: string;
 
-  @ManyToOne(() => User, user => user.passwordResets)
+  @ManyToOne(() => User, (user) => user.passwordResets)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({
-    unique: true,
-  })
+  @Column({ unique: true })
   tokenHash: string;
 
   @Column()

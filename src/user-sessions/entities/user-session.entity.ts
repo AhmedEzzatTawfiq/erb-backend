@@ -1,28 +1,31 @@
-import { ManyToOne } from "typeorm";
-import { BaseEntity } from "../../common/entities/base.entity";
-import { Column, Entity, JoinColumn } from "typeorm";
-import { User } from "../../users/entities/user.entity";
+import {
+    Column,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+} from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
+import { User } from '../../users/entities/user.entity';
 
-@Entity("user_sessions")
+@Entity('user_sessions')
 export class UserSession extends BaseEntity {
+    @Column({
+        name: 'user_id',
+        type: 'uuid',
+    })
+    userId: string;
 
-    @ManyToOne(() => User, user => user.sessions, {
-        onDelete: 'CASCADE'
+    @ManyToOne(() => User, (user) => user.sessions, {
+        onDelete: 'CASCADE',
     })
     @JoinColumn({ name: 'user_id' })
     user: User;
 
     @Column({
-        name: 'user_id',
-        type: 'varchar',
-    })
-    userId: string;
-
-    @Column({
         name: 'refresh_token',
         type: 'varchar',
         length: 255,
-        nullable: true
+        nullable: true,
     })
     refreshTokenHash: string;
 
@@ -30,7 +33,7 @@ export class UserSession extends BaseEntity {
         name: 'device_name',
         type: 'varchar',
         length: 255,
-        nullable: true
+        nullable: true,
     })
     deviceName: string;
 
@@ -38,33 +41,33 @@ export class UserSession extends BaseEntity {
         name: 'ip_address',
         type: 'varchar',
         length: 255,
-        nullable: true
+        nullable: true,
     })
     ipAddress: string;
 
     @Column({
         name: 'expires_at',
         type: 'timestamp',
-        nullable: true
+        nullable: true,
     })
     expiresAt: Date;
 
     @Column({
         name: 'last_used_at',
         type: 'timestamp',
-        nullable: true
+        nullable: true,
     })
     lastUsedAt: Date;
 
     @Column({
         type: 'boolean',
-        default: false
+        default: false,
     })
     isRevoked: boolean;
 
     @Column({
         type: 'timestamp',
-        nullable: true
+        nullable: true,
     })
     revokedAt: Date | null;
 }
