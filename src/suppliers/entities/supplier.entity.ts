@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
+  JoinColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('suppliers')
 export class Supplier {
@@ -40,6 +43,13 @@ export class Supplier {
 
   @Column({ type: 'simple-array', nullable: true })
   productsSupplied: string[];
+
+  @Column({ type: 'uuid', nullable: true })
+  categoryId: string | null;
+
+  @ManyToOne(() => Category, { nullable: true, eager: false })
+  @JoinColumn({ name: 'categoryId' })
+  category: Category | null;
 
   @Column({ type: 'boolean', default: false })
   isDeleted: boolean;

@@ -77,11 +77,13 @@ export class AuthController {
   ) {
     const refreshToken = request.cookies.refreshToken;
     const result = await this.authService.logout(refreshToken);
+    const isProduction = process.env.NODE_ENV === 'production';
 
     response.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false, // true when using https
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
     });
 
     return result;
@@ -96,10 +98,13 @@ export class AuthController {
 
     const result = await this.authService.logoutAll(refreshToken);
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     response.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
     });
 
     return result;
@@ -119,10 +124,13 @@ export class AuthController {
     response: Response,
     refreshToken: string,
   ) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     response.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }

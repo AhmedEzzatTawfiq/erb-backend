@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateSupplierDto {
@@ -43,4 +44,8 @@ export class CreateSupplierDto {
   @IsArray()
   @IsString({ each: true })
   productsSupplied?: string[];
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 }

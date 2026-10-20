@@ -110,6 +110,7 @@ export class SuppliersService {
 
     const queryBuilder = this.supplierRepository
       .createQueryBuilder('supplier')
+      .leftJoinAndSelect('supplier.category', 'category')
       .where('(supplier.isDeleted = false OR supplier.isDeleted IS NULL)');
 
     if (search) {
@@ -149,6 +150,7 @@ export class SuppliersService {
   async findOne(id: string) {
     const supplier = await this.supplierRepository
       .createQueryBuilder('supplier')
+      .leftJoinAndSelect('supplier.category', 'category')
       .where('supplier.id = :id', { id })
       .andWhere('(supplier.isDeleted = false OR supplier.isDeleted IS NULL)')
       .getOne();
