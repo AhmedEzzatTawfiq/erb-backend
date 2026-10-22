@@ -28,10 +28,10 @@ async function bootstrap() {
     transform: true,
   }));
 
-  const allowedOrigins = process.env.FRONTEND_URL
-  ?.split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean) ?? [];
+  const allowedOrigins = [
+  'http://localhost:3000',
+  'https://businesssuite-mocha.vercel.app',
+];
 
 app.enableCors({
   origin: allowedOrigins,
