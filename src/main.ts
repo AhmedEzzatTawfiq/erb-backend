@@ -28,12 +28,15 @@ async function bootstrap() {
     transform: true,
   }));
 
-  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  const allowedOrigins = process.env.FRONTEND_URL
+  ?.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean) ?? [];
 
-  app.enableCors({
-    origin: frontendUrl,
-    credentials: true,
-  });
+app.enableCors({
+  origin: allowedOrigins,
+  credentials: true,
+});
 
   await app.listen(process.env.PORT ?? 4000);
 }

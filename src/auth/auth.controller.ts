@@ -17,8 +17,6 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('register')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
   async register(
     @Body() createUserDto: CreateUserDto,
     @Res({ passthrough: true }) response: Response,
