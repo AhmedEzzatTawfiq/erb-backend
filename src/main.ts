@@ -28,15 +28,17 @@ async function bootstrap() {
     transform: true,
   }));
 
-  const allowedOrigins = [
-  'http://localhost:3000',
-  'https://businesssuite-mocha.vercel.app',
-];
+  const allowedOrigins = (
+    process.env.FRONTEND_URL ?? 'http://localhost:3000'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
-app.enableCors({
-  origin: allowedOrigins,
-  credentials: true,
-});
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+  });
 
   await app.listen(process.env.PORT ?? 4000);
 }
